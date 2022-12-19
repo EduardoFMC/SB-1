@@ -1,0 +1,23 @@
+# depslib dependency file v1.0
+1671432776 source:e:\2022.2\sb\montador\main.cpp
+	<bits/stdc++.h>
+	<fstream>
+	<iostream>
+	"tradutor.h"
+
+1671432897 e:\2022.2\sb\montador\tradutor.h
+	<bits/stdc++.h>
+	<fstream>
+	<regex>
+
+1671432776 source:e:\2022.2\sb\sb-1\montador\main.cpp
+	<bits/stdc++.h>
+	<fstream>
+	<iostream>
+	"tradutor.h"
+
+1671432897 e:\2022.2\sb\sb-1\montador\tradutor.h
+	<bits/stdc++.h>
+	<fstream>
+	<regex>
+
