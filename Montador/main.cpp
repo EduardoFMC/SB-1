@@ -8,14 +8,8 @@ using namespace std;
 int main(){
     //cout << "dsadasdas";
     vector<vector<string>> programa = token_parser("bin.asm");
-    for ( int i =0 ; i < programa.size();i++){
-        for ( int j =0 ; j < programa[i].size();j++){
-        cout << programa[i][j];
-        cout << "\n";
-        }
-    }
-
-
+    map <string,int> ts = primeiraPassagem(programa);
+    segundaPassagem(programa, ts);
 }
 
 //int main(int argc, char *argv[]){

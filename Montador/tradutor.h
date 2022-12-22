@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 #include <fstream>
 #include <regex>
+#include <stdexcept>
 
 using namespace std;
 
@@ -23,30 +24,7 @@ map <string,int> opcodes = {
 {"OUTPUT", 13},
 {"STOP", 14}};
 
-vector<string> diretivas = {"BEGIN", "CONST", "END", "EQU", "EXTERN", "IF", "PUBLIC", "SPACE", "SECTION"};
-
-// FAREMOS TRATAMENTO DO PROGRAMA LINHA A LINHA, COM IINSTRUÇÃO EM UM LUGAR
-// ASSIM SERA CADA TOKEN POR LINHA
-// EXEMPLO
-/*
-MUL N
-STORE N
-ENDMACRO
-INPUT N
-LOAD N
-*/
-
-/*
-MUL
-N
-STORE
-N
-ENDMACRO
-INPUT
-N
-LOAD
-N
-*/
+vector<string> diretivas = {"CONST", "EQU", "IF", "SPACE", "SECTION"};
 
 // Separa os tokens em linhas, assim saberemos exatamente qual linha de erro irá acontecer e qual
 vector<vector<string>> token_parser(string arquivo){
@@ -65,6 +43,208 @@ vector<vector<string>> token_parser(string arquivo){
         linha.clear();
     }
     return programa;
+}
+
+bool isLabel(string token) {
+    if (token[token.length()-1] == ':') {
+        return true;
+    }
+    return false;
+}
+
+string getLabel(string token) {
+    return token.substr(0, token.size()-1);
+}
+
+bool inTS(string token, map <string,int> ts) {
+    if (ts.find(token) == ts.end()) {
+        return false;
+    }
+    return true;
+}
+
+void printar_programa(vector<vector<string>> programa) {
+   for (int i=0; i < programa.size(); i++){
+        for (int j=0; j < programa[i].size(); j++) {
+            cout << programa[i][j];
+            cout << " ";
+        }
+        cout << "\n";
+    }
+}
+
+bool isSymbol(string &token) {
+    string::iterator it;
+
+    for (it = token.begin(); it != token.end(); it++){
+        if (isdigit(*it) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+map <string,int> primeiraPassagem(vector<vector<string>> &programa){
+    int contador_posicao = 0;
+    int contador_linha = 1;
+    map <string,int> ts;
+    string label;
+    string op;
+    string opn;
+
+    for (int i=0; i < programa.size(); i++, contador_linha++){
+        if (isLabel(programa[i][0])) {
+            label = getLabel(programa[i][0]);
+            op = programa[i][1];
+
+            if (inTS(label, ts)) {
+                throw invalid_argument("Label already defined");
+            } else {
+                ts.insert(pair<string, int>(label, contador_posicao));
+            }
+        } else {
+            op = programa[i][0];
+        }
+
+        if (opcodes.count(op)) {
+            if (op == "COPY") {
+                contador_posicao += 3;
+            } else if (op == "STOP") {
+                contador_posicao += 1;
+            } else {
+                contador_posicao += 2;
+            }
+        } else if (count(diretivas.begin(), diretivas.end(), op)) {
+            if (op == "CONST") {
+                contador_posicao += 1;
+            } else if (op == "SPACE") {
+                if (programa[i].size() > 2) {
+                    contador_posicao += stoi(programa[i][2]);
+                } else {
+                    contador_posicao += 1;
+                }
+            }
+        } else {
+            throw invalid_argument("Unknown operation");
+        }
+    }
+
+    return ts;
+}
+
+vector<string> sepOps(string ops) {
+    string tmp;
+    stringstream ss(ops);
+    vector<string> words;
+
+    while(getline(ss, tmp, ',')) {
+        words.push_back(tmp);
+    }
+
+    return words;
+}
+
+int getValue (string str, map <string,int> mp) {
+    return mp.find(str)->second;
+}
+
+void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
+    int contador_posicao = 0;
+    int contador_linha = 1;
+    string label;
+    string op;
+    string ops_i;
+    vector<string> ops;
+    string objeto = "";
+    string objeto_temp;
+
+    for (int i=0; i < programa.size(); i++, contador_linha++){
+        //cout << contador_posicao;
+        //cout << "\n";
+
+        if (isLabel(programa[i][0])) {
+            label = getLabel(programa[i][0]);
+            op = programa[i][1];
+
+            if (programa[i].size() > 2) {
+                ops_i = programa[i][2];
+            } else {
+                ops_i = "";
+            }
+        } else {
+            op = programa[i][0];
+
+            if (programa[i].size() > 1) {
+                ops_i = programa[i][1];
+            } else {
+                ops_i = "";
+            }
+        }
+
+        if (op != "SECTION") {
+            ops = sepOps(ops_i);
+
+            for (int p=0; p < ops.size(); p++) {
+                if (isSymbol(ops[p])) {
+                    if (inTS(ops[p], ts) == 0) {
+                        throw invalid_argument("Unknown symbol");
+                    }
+                }
+            }
+
+        if (opcodes.count(op)) {
+            if ((op == "COPY") && (ops.size() != 2)) {
+                throw invalid_argument("Invalid operand");
+            }
+
+            if ((op == "STOP") && (ops.size() != 0)) {
+                throw invalid_argument("Invalid operand");
+            }
+
+            if ((op != "COPY") && (op != "STOP") && (ops.size()) != 1) {
+                throw invalid_argument("Invalid operand");
+            } else {
+                contador_posicao += 1 + ops.size();
+            }
+
+            objeto = to_string(getValue(op, opcodes));
+
+            for (int o=0; o < ops.size(); o++) {
+                objeto_temp = to_string(getValue(ops[o], ts));
+                objeto += " " + objeto_temp;
+            }
+
+            cout << objeto;
+            cout << "\n";
+
+        } else if (count(diretivas.begin(), diretivas.end(), op)) {
+            if (op == "CONST") {
+                objeto = ops[0];
+
+                contador_posicao += 1;
+            }
+            if (op == "SPACE") {
+                if (ops.size() == 1) {
+                    objeto = "";
+                    for (int j=0; j < atoi(ops[0].c_str()); j++) {
+                        objeto += "XX ";
+                    }
+                    contador_posicao += atoi(ops[0].c_str());
+                } else {
+                    objeto = "XX";
+                    contador_posicao += 1;
+                }
+            }
+                                        cout << objeto;
+            cout << "\n";
+        } else {
+            throw invalid_argument("Unknown operation");
+        }
+
+        }
+        ops.clear();
+    }
+
 }
 
 #endif // TRADUTOR_H_INCLUDED
