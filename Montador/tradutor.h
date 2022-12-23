@@ -148,6 +148,10 @@ int getValue (string str, map <string,int> mp) {
     return mp.find(str)->second;
 }
 
+string getValueEQUS (string str, map <string,string> mp) {
+    return mp.find(str)->second;
+}
+
 void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
     int contador_posicao = 0;
     int contador_linha = 1;
@@ -243,6 +247,83 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
 
         }
         ops.clear();
+    }
+
+}
+
+string getLine(vector<string> strs) {
+    string result;
+    ostringstream imploded;
+    copy(strs.begin(), strs.end(),
+               ostream_iterator<string>(imploded, " "));
+    result = imploded.str();
+    result.pop_back();
+    return result;
+}
+
+void preProcessamento (vector<vector<string>> &programa) {
+    int section_text = 0;
+    vector<int> remove_index;
+    map <string,int> equs;
+    int value;
+    string label;
+
+    if (getLine(programa[0]) == "SECTION TEXT") {
+        return;
+    }
+
+    for (int i=0; i < programa.size(); i++){
+        if (getLine(programa[i]) == "SECTION TEXT") {
+            section_text = 1;
+            continue;
+        }
+
+        if (section_text) {
+            // Tá dentro de texto, pode checar IF
+            if (programa[i][0] == "IF") {
+                if (inTS(programa[i][1], equs)) {
+                    value = getValue(programa[i][1], equs);
+                    remove_index.push_back(i);
+                    if (value == 0) {
+                        remove_index.push_back(i+1);
+                    }
+                } else {
+                    cout << "Erro: operando não é EQU";
+                }
+            } else {
+                if (programa[i].size() > 1) {
+                    if ((programa[i][1] == "SPACE") || (programa[i][1] == "CONST")) {
+                        if (programa[i].size() > 2) {
+                            if (inTS(programa[i][2], equs)) {
+                                value = getValue(programa[i][2], equs);
+                                programa[i][2] = to_string(value);
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // Tá fora de texto, precisa checar EQU
+            if (programa[i][1] == "EQU") {
+                if (isLabel(programa[i][0])) {
+                    label = getLabel(programa[i][0]);
+                    value = atoi(programa[i][2].c_str());
+                    equs.insert(pair<string, int>(label, value));
+                    remove_index.push_back(i);
+                } else {
+                    cout << "Erro: Falta rótulo em EQU";
+                }
+            } else {
+                cout << programa[i][1];
+                cout << "Erro: operação feita antes da seção de texto\n";
+            }
+        }
+    }
+
+    sort(remove_index.begin(), remove_index.end(), greater<int>());
+
+    for (int i=0; i < remove_index.size(); i++) {
+        programa.erase(programa.begin() + remove_index[i]);
     }
 
 }

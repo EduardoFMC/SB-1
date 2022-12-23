@@ -7,7 +7,10 @@ using namespace std;
 
 int main(){
     //cout << "dsadasdas";
-    vector<vector<string>> programa = token_parser("bin.asm");
+    vector<vector<string>> programa = token_parser("bin_equ.asm");
+    preProcessamento(programa);
+    printar_programa(programa);
+    cout << "\n\n";
     map <string,int> ts = primeiraPassagem(programa);
     segundaPassagem(programa, ts);
 }
