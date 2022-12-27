@@ -5,6 +5,9 @@
 #include <fstream>
 #include <regex>
 #include <stdexcept>
+#include <cctype>
+#include <string>
+
 
 using namespace std;
 
@@ -32,18 +35,41 @@ vector<vector<string>> token_parser(string arquivo){
     string str;
     vector<vector<string>> programa;
     vector<string> linha;
+    string hex_prefix = "0X"; // em maisculo por causa da tranformação em maisculo abaixo
+
     while (getline(file, str)) {
-        istringstream iss(str);
+        transform(str.begin(), str.end(), str.begin(), ::toupper); // tranforma em maiusculo
+        istringstream iss(str.substr(0, str.find(';'))); // remove comentarios. Possivel erro: é possivel que haja espaço a mais no final da linha
         string token;
-        while (getline(iss, token, ' ')){
-            token = token.c_str();
-            linha.push_back(token);
+
+        if (str.length() != 0){ // Ignora linhas vazias
+
+            while (getline(iss, token, ' ')){
+                token = token.c_str();
+
+//                if (token[0] == ';'){ // Remove comentario, mas apenas se tiver espaço antes
+//                    break;
+//                }
+                if (token.find_first_not_of(' ') != string::npos){ // remove espaços desnecessarios
+
+                    if (token.find(hex_prefix, 0) == 0){
+                        token = token.substr(hex_prefix.length());
+                        token = to_string(stoul(token, nullptr, 16));
+                    }
+
+                    linha.push_back(token);
+                }
+            }
+
+            programa.push_back(linha);
+            linha.clear();
         }
-        programa.push_back(linha);
-        linha.clear();
     }
     return programa;
+
 }
+
+
 
 bool isLabel(string token) {
     if (token[token.length()-1] == ':') {
@@ -235,7 +261,7 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
                     }
                     contador_posicao += atoi(ops[0].c_str());
                 } else {
-                    objeto = "XX";
+                    objeto = "XX"; // LEMBRAR QUE NÃO SE DEVE SERR COLOCADO XX MAS 0 QUANDO FOR SPACE
                     contador_posicao += 1;
                 }
             }
@@ -327,5 +353,7 @@ void preProcessamento (vector<vector<string>> &programa) {
     }
 
 }
+
+// DEIXAR O TOKENIZADOR DE FORMA A SEPARAR MELHOR
 
 #endif // TRADUTOR_H_INCLUDED

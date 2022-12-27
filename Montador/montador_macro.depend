@@ -10,14 +10,17 @@
 	<fstream>
 	<regex>
 
-1671432776 source:e:\2022.2\sb\sb-1\montador\main.cpp
+1672111385 source:e:\2022.2\sb\sb-1\montador\main.cpp
 	<bits/stdc++.h>
 	<fstream>
 	<iostream>
 	"tradutor.h"
 
-1671432897 e:\2022.2\sb\sb-1\montador\tradutor.h
+1672123145 e:\2022.2\sb\sb-1\montador\tradutor.h
 	<bits/stdc++.h>
 	<fstream>
 	<regex>
+	<stdexcept>
+	<cctype>
+	<string>
 
