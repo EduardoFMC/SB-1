@@ -69,6 +69,17 @@ vector<vector<string>> token_parser(string arquivo){
 
 }
 
+vector<string> sepOps(string ops) {
+    string tmp;
+    stringstream ss(ops);
+    vector<string> words;
+
+    while(getline(ss, tmp, ',')) {
+        words.push_back(tmp);
+    }
+
+    return words;
+}
 
 
 bool isLabel(string token) {
@@ -158,18 +169,6 @@ map <string,int> primeiraPassagem(vector<vector<string>> &programa){
     return ts;
 }
 
-vector<string> sepOps(string ops) {
-    string tmp;
-    stringstream ss(ops);
-    vector<string> words;
-
-    while(getline(ss, tmp, ',')) {
-        words.push_back(tmp);
-    }
-
-    return words;
-}
-
 int getValue (string str, map <string,int> mp) {
     return mp.find(str)->second;
 }
@@ -189,9 +188,6 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
     string objeto_temp;
 
     for (int i=0; i < programa.size(); i++, contador_linha++){
-        //cout << contador_posicao;
-        //cout << "\n";
-
         if (isLabel(programa[i][0])) {
             label = getLabel(programa[i][0]);
             op = programa[i][1];
@@ -352,6 +348,157 @@ void preProcessamento (vector<vector<string>> &programa) {
         programa.erase(programa.begin() + remove_index[i]);
     }
 
+}
+
+bool ehArg(string value, map<string,string> inds) {
+    if (inds.find(value) == inds.end()) {
+      return false;
+    }
+    return true;
+}
+
+string joinOps(vector<string> strs) {
+    string result;
+    ostringstream imploded;
+    copy(strs.begin(), strs.end(),
+               ostream_iterator<string>(imploded, ","));
+    result = imploded.str();
+    result.pop_back();
+
+    return result;
+}
+
+bool inMACROS(string token, map <string,vector<vector<string>>> macros) {
+    if (macros.find(token) == macros.end()) {
+        return false;
+    }
+    return true;
+}
+
+int get_value(string token) {
+    token.erase(0,1);
+    return atoi(token.c_str());
+}
+
+void processamentoMacro(vector<vector<string>> &programa) {
+    map <string,vector<vector<string>>> macros;
+    map <string,string> macro_args;
+    vector<string> macro_line;
+    vector<string> args;
+    bool inside_macro = false;
+    string macro_atual;
+    string str_args;
+    vector<string> args_repl;
+    vector<string> repl_line;
+    vector<int> repl_macros;
+    vector<pair <int,int>> end_macros;
+    pair <int,int> end_macro;
+    int end_correcao = 0;
+
+    for (int i=0; i < programa.size(); i++){
+        if (inside_macro) {
+            // Dentro de macro
+            if (programa[i][0] == "ENDMACRO") {
+                inside_macro = false;
+                macro_args.clear();
+                end_macro.second = i;
+                end_macros.push_back(end_macro);
+            } else {
+                for (int j=0; j < programa[i].size(); j++) {
+                    if (j == 1) {
+                        // Quando há argumentos, é necessário substituir pelo index #i
+                        args = sepOps(programa[i][1]);
+
+                        for (int a=0; a < args.size(); a++) {
+                            if (ehArg(args[a], macro_args)) {
+                                args[a] = macro_args[args[a]];
+                            }
+                        }
+
+                        str_args = joinOps(args);
+                        macro_line.push_back(str_args);
+                    } else {
+                        // Se não é argumento, não muda
+                        macro_line.push_back(programa[i][j]);
+                    }
+                }
+                macros[macro_atual].push_back(macro_line);
+                macro_line.clear();
+            }
+        } else {
+            if (programa[i].size() > 1) {
+                // Início de macro
+                if (programa[i][1] == "MACRO") {
+                    inside_macro = true;
+                    end_macro.first = i;
+                    macro_atual = getLabel(programa[i][0]);
+                    macros.insert(pair<string,vector<vector<string>>>(macro_atual, vector<vector<string>>()));
+
+                    if (programa[i].size() == 3) {
+                        args = sepOps(programa[i][2]);
+                        for (int a=0; a < args.size(); a++) {
+                            macro_args.insert(pair<string,string>(args[a], "#" + to_string(a)));
+                        }
+                    }
+
+                    continue;
+                }
+            }
+
+            // Não faz parte de definição de macro
+            if (inMACROS(programa[i][0], macros)) {
+                repl_macros.push_back(i);
+
+                if (programa[i].size() == 2) {
+                    // Pegar argumentos passados pelo usuário
+                    args_repl = sepOps(programa[i][1]);
+                }
+
+                for (int m=0; m < macros[programa[i][0]].size(); m++) {
+                    for (int n=0; n < macros[programa[i][0]][m].size(); n++) {
+                        if (n == 1) {
+                            // Se há argumentos na linha da MACRO, é preciso substituir pelos argumentos passados
+                            args = sepOps(macros[programa[i][0]][m][n]);
+
+                            for (int b=0; b < args.size(); b++) {
+                                if (args[b][0] == '#') {
+                                    args[b] = args_repl[get_value(args[b])];
+                                }
+                            }
+
+                            str_args = joinOps(args);
+                            repl_line.push_back(str_args);
+                        } else {
+                            repl_line.push_back(macros[programa[i][0]][m][n]);
+                        }
+                    }
+
+                    programa.insert(programa.begin() + (i + m + 1), repl_line);
+                    repl_line.clear();
+                }
+            }
+        }
+    }
+
+    // Remover as linhas onde houve chamado a MACRO
+    sort(repl_macros.begin(), repl_macros.end(), greater<int>());
+    for (int i=0; i < repl_macros.size(); i++) {
+        programa.erase(programa.begin() + repl_macros[i]);
+    }
+
+    // Remover as declarações das MACROS
+    // Fator de correção necessário porque começa removendo as linhas da primeira macro, afetando o endereço das próximas
+    for (int i=0; i < end_macros.size(); i++) {
+        end_macros[i].first -= end_correcao;
+        end_macros[i].second -= end_correcao;
+
+        for (int c=end_macros[i].second; c >= end_macros[i].first; c--) {
+            programa.erase(programa.begin() + c);
+        }
+
+        end_correcao += 1 + end_macros[i].second - end_macros[i].first;
+
+    }
 }
 
 // DEIXAR O TOKENIZADOR DE FORMA A SEPARAR MELHOR

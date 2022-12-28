@@ -7,18 +7,19 @@ using namespace std;
 
 int main(){
     //cout << "dsadasdas";
-    vector<vector<string>> programa = token_parser("bin_equ_teste.asm");
+    vector<vector<string>> programa = token_parser("fatoriamacro_testes.asm");
+
+    //printar_programa(programa);
+    //printf("\n\n\n");
+    //preProcessamento(programa); // 1 Parte. Lida apenas com EQU e IF
+    processamentoMacro(programa);
 
     printar_programa(programa);
-    printf("\n\n\n");
-    preProcessamento(programa); // 1 Parte. Lida apenas com EQU e IF
 
-    printar_programa(programa);
+    //cout << "\n\n";
+    //map <string,int> ts = primeiraPassagem(programa);
 
-    cout << "\n\n";
-    map <string,int> ts = primeiraPassagem(programa);
-
-    segundaPassagem(programa, ts);
+    //segundaPassagem(programa, ts);
 }
 
 //int main(int argc, char *argv[]){
