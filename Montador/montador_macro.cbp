@@ -33,6 +33,9 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="main.cpp" />
+		<Unit filename="tokenizador.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="tradutor.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

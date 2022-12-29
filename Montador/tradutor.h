@@ -29,45 +29,7 @@ map <string,int> opcodes = {
 
 vector<string> diretivas = {"CONST", "EQU", "IF", "SPACE", "SECTION"};
 
-// Separa os tokens em linhas, assim saberemos exatamente qual linha de erro irá acontecer e qual
-vector<vector<string>> token_parser(string arquivo){
-    ifstream file(arquivo);
-    string str;
-    vector<vector<string>> programa;
-    vector<string> linha;
-    string hex_prefix = "0X"; // em maisculo por causa da tranformação em maisculo abaixo
 
-    while (getline(file, str)) {
-        transform(str.begin(), str.end(), str.begin(), ::toupper); // tranforma em maiusculo
-        istringstream iss(str.substr(0, str.find(';'))); // remove comentarios. Possivel erro: é possivel que haja espaço a mais no final da linha
-        string token;
-
-        if (str.length() != 0){ // Ignora linhas vazias
-
-            while (getline(iss, token, ' ')){
-                token = token.c_str();
-
-//                if (token[0] == ';'){ // Remove comentario, mas apenas se tiver espaço antes
-//                    break;
-//                }
-                if (token.find_first_not_of(' ') != string::npos){ // remove espaços desnecessarios
-
-                    if (token.find(hex_prefix, 0) == 0){
-                        token = token.substr(hex_prefix.length());
-                        token = to_string(stoul(token, nullptr, 16));
-                    }
-
-                    linha.push_back(token);
-                }
-            }
-
-            programa.push_back(linha);
-            linha.clear();
-        }
-    }
-    return programa;
-
-}
 
 vector<string> sepOps(string ops) {
     string tmp;
@@ -100,15 +62,6 @@ bool inTS(string token, map <string,int> ts) {
     return true;
 }
 
-void printar_programa(vector<vector<string>> programa) {
-   for (int i=0; i < programa.size(); i++){
-        for (int j=0; j < programa[i].size(); j++) {
-            cout << programa[i][j];
-            cout << " ";
-        }
-        cout << "\n";
-    }
-}
 
 bool isSymbol(string &token) {
     string::iterator it;
@@ -165,7 +118,12 @@ map <string,int> primeiraPassagem(vector<vector<string>> &programa){
             throw invalid_argument("Unknown operation");
         }
     }
-
+//    printf("\ndasdasd\n");
+//    for(auto it = ts.cbegin(); it != ts.cend(); ++it)
+//{
+//    std::cout << it->first << " " << it->second << "\n";
+//}
+//    printf("\ndasdasd\n");
     return ts;
 }
 
@@ -253,11 +211,11 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
                 if (ops.size() == 1) {
                     objeto = "";
                     for (int j=0; j < atoi(ops[0].c_str()); j++) {
-                        objeto += "XX ";
+                        objeto += "00 ";
                     }
                     contador_posicao += atoi(ops[0].c_str());
                 } else {
-                    objeto = "XX"; // LEMBRAR QUE NÃO SE DEVE SERR COLOCADO XX MAS 0 QUANDO FOR SPACE
+                    objeto = "00"; // LEMBRAR QUE NÃO SE DEVE SERR COLOCADO XX MAS 00 QUANDO FOR SPACE
                     contador_posicao += 1;
                 }
             }

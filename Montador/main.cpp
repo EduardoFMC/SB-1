@@ -3,23 +3,38 @@
 #include <iostream>
 
 #include "tradutor.h"
+#include "tokenizador.h"
+
 using namespace std;
 
 int main(){
-    //cout << "dsadasdas";
-    vector<vector<string>> programa = token_parser("fatoriamacro_testes.asm");
+    // TESTE com macro
+//    vector<vector<string>> programa = token_parser("fatoriamacro_testes.asm");
+//
+//    //printar_programa(programa);
+//    //printf("\n\n\n");
+//    //preProcessamento(programa); // 1 Parte. Lida apenas com EQU e IF
+//    processamentoMacro(programa);
+//
+//    printar_programa(programa);
+//
+//    //cout << "\n\n";
+//    //map <string,int> ts = primeiraPassagem(programa);
+//
+//    //segundaPassagem(programa, ts);
 
-    //printar_programa(programa);
-    //printf("\n\n\n");
-    //preProcessamento(programa); // 1 Parte. Lida apenas com EQU e IF
-    processamentoMacro(programa);
+    // TESTE sem macro
+    vector<vector<string>> programa = token_parser("bin_equ_teste.asm");
 
     printar_programa(programa);
+    printf("\n\n\n");
+    preProcessamento(programa); // 1 Parte. Lida apenas com EQU e IF
+    printar_programa(programa);
+    printf("\n\n\n");
+    map <string,int> ts = primeiraPassagem(programa);
+    segundaPassagem(programa, ts);
 
-    //cout << "\n\n";
-    //map <string,int> ts = primeiraPassagem(programa);
 
-    //segundaPassagem(programa, ts);
 }
 
 //int main(int argc, char *argv[]){
