@@ -118,12 +118,12 @@ map <string,int> primeiraPassagem(vector<vector<string>> &programa){
             throw invalid_argument("Unknown operation");
         }
     }
-//    printf("\ndasdasd\n");
-//    for(auto it = ts.cbegin(); it != ts.cend(); ++it)
-//{
-//    std::cout << it->first << " " << it->second << "\n";
-//}
-//    printf("\ndasdasd\n");
+    printf("\ndasdasd\n");
+    for(auto it = ts.cbegin(); it != ts.cend(); ++it)
+{
+    std::cout << it->first << " " << it->second << "\n";
+}
+    printf("\ndasdasd\n");
     return ts;
 }
 
@@ -138,6 +138,7 @@ string getValueEQUS (string str, map <string,string> mp) {
 void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
     int contador_posicao = 0;
     int contador_linha = 1;
+    int fator;
     string label;
     string op;
     string ops_i;
@@ -194,7 +195,13 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
             objeto = to_string(getValue(op, opcodes));
 
             for (int o=0; o < ops.size(); o++) {
-                objeto_temp = to_string(getValue(ops[o], ts));
+                fator = 0;
+                if (programa[i].size() > 3){ // cehcar se tem X+3
+                    fator = std::stoi(programa[i].back());
+
+                   // cout << "############" << fator << endl;
+                }
+                objeto_temp = to_string(getValue(ops[o], ts)+fator);
                 objeto += " " + objeto_temp;
             }
 
@@ -211,7 +218,11 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
                 if (ops.size() == 1) {
                     objeto = "";
                     for (int j=0; j < atoi(ops[0].c_str()); j++) {
-                        objeto += "00 ";
+                        if (j != atoi(ops[0].c_str()) -1){
+                            objeto += "00\n"; // Pirntagem do codigo objeto do SPACES
+                        } else{
+                            objeto += "00";
+                        }
                     }
                     contador_posicao += atoi(ops[0].c_str());
                 } else {

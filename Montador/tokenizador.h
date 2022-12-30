@@ -1,12 +1,27 @@
 #ifndef TOKENIZADOR_H_INCLUDED
 #define TOKENIZADOR_H_INCLUDED
 
+#include <string.h>
+#include <stdio.h>
+
 bool labelSozinha(vector<string> linha){
     if ((linha.size() == 1) && (isLabel(linha[0]))){
         return true;
     } else{
         return false;
     }
+}
+// tratamento de X+3
+vector<string> trataPlus(string tokenPlus){
+    vector<string> vec;
+    istringstream iss(tokenPlus);
+    string s;
+    while (getline(iss, s, '+')) {
+        vec.push_back(s);
+    }
+    cout << vec[0] << endl;
+    cout << vec[1] << endl;
+    return vec;
 }
 
 // Separa os tokens em linhas, assim saberemos exatamente qual linha de erro irá acontecer e qual
@@ -17,6 +32,7 @@ vector<vector<string>> token_parser(string arquivo){
     bool flag = false;
     vector<vector<string>> programa;
     vector<string> linha;
+    vector<string> vec; // para X+3
     string hex_prefix = "0X"; // em maisculo por causa da tranformação em maisculo abaixo
 
     while (getline(file, str)) {
@@ -39,7 +55,16 @@ vector<vector<string>> token_parser(string arquivo){
                         flag = false;
                         linha.push_back(labelLinha);
                     }
-                    linha.push_back(token);
+
+                    if (token.find('+') != std::string::npos){
+                        vec = trataPlus(token);
+                        linha.push_back(vec[0]);
+                        linha.push_back("+");
+                        linha.push_back(vec[1]);
+                    }else{
+                        linha.push_back(token);
+                    }
+
                 }
             }
             if (labelSozinha(linha)){
