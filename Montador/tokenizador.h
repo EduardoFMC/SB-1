@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include "tradutor.h"
 
 bool labelSozinha(vector<string> linha){
     if ((linha.size() == 1) && (isLabel(linha[0]))){

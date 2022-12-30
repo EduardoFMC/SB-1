@@ -8,7 +8,6 @@
 #include <cctype>
 #include <string>
 
-
 using namespace std;
 
 map <string,int> opcodes = {
@@ -28,8 +27,6 @@ map <string,int> opcodes = {
 {"STOP", 14}};
 
 vector<string> diretivas = {"CONST", "EQU", "IF", "SPACE", "SECTION"};
-
-
 
 vector<string> sepOps(string ops) {
     string tmp;
@@ -81,13 +78,26 @@ map <string,int> primeiraPassagem(vector<vector<string>> &programa){
     string label;
     string op;
     string opn;
+    bool hasLabel;
 
     for (int i=0; i < programa.size(); i++, contador_linha++){
+        hasLabel = false;
+
+        for (int j=0; j < programa[i].size(); j++) {
+            if (isLabel(programa[i][j])) {
+                if (hasLabel) {
+                    cout << "Erro: mais de um rotulo na mesma linha\n";
+                }
+                hasLabel = true;
+            }
+        }
+
         if (isLabel(programa[i][0])) {
             label = getLabel(programa[i][0]);
             op = programa[i][1];
 
             if (inTS(label, ts)) {
+                cout << "Erro: Label ja definida.\n";
                 throw invalid_argument("Label already defined");
             } else {
                 ts.insert(pair<string, int>(label, contador_posicao));
@@ -115,15 +125,11 @@ map <string,int> primeiraPassagem(vector<vector<string>> &programa){
                 }
             }
         } else {
+            cout << "Erro: op desconhecido.\n";
             throw invalid_argument("Unknown operation");
         }
     }
-    printf("\ndasdasd\n");
-    for(auto it = ts.cbegin(); it != ts.cend(); ++it)
-{
-    std::cout << it->first << " " << it->second << "\n";
-}
-    printf("\ndasdasd\n");
+
     return ts;
 }
 
@@ -145,6 +151,7 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
     vector<string> ops;
     string objeto = "";
     string objeto_temp;
+    bool hasTEXT = false;
 
     for (int i=0; i < programa.size(); i++, contador_linha++){
         if (isLabel(programa[i][0])) {
@@ -172,74 +179,83 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
             for (int p=0; p < ops.size(); p++) {
                 if (isSymbol(ops[p])) {
                     if (inTS(ops[p], ts) == 0) {
-                        throw invalid_argument("Unknown symbol");
+                        cout << "Erro: dado nao declarado\n";
+                        throw invalid_argument("Dado nao declarado");
                     }
                 }
             }
 
-        if (opcodes.count(op)) {
-            if ((op == "COPY") && (ops.size() != 2)) {
-                throw invalid_argument("Invalid operand");
-            }
-
-            if ((op == "STOP") && (ops.size() != 0)) {
-                throw invalid_argument("Invalid operand");
-            }
-
-            if ((op != "COPY") && (op != "STOP") && (ops.size()) != 1) {
-                throw invalid_argument("Invalid operand");
-            } else {
-                contador_posicao += 1 + ops.size();
-            }
-
-            objeto = to_string(getValue(op, opcodes));
-
-            for (int o=0; o < ops.size(); o++) {
-                fator = 0;
-                if (programa[i].size() > 3){ // cehcar se tem X+3
-                    fator = std::stoi(programa[i].back());
-
-                   // cout << "############" << fator << endl;
+            if (opcodes.count(op)) {
+                if ((op == "COPY") && (ops.size() != 2)) {
+                    throw invalid_argument("Invalid operand");
                 }
-                objeto_temp = to_string(getValue(ops[o], ts)+fator);
-                objeto += " " + objeto_temp;
-            }
 
-            cout << objeto;
-            cout << "\n";
+                if ((op == "STOP") && (ops.size() != 0)) {
+                    throw invalid_argument("Invalid operand");
+                }
 
-        } else if (count(diretivas.begin(), diretivas.end(), op)) {
-            if (op == "CONST") {
-                objeto = ops[0];
-
-                contador_posicao += 1;
-            }
-            if (op == "SPACE") {
-                if (ops.size() == 1) {
-                    objeto = "";
-                    for (int j=0; j < atoi(ops[0].c_str()); j++) {
-                        if (j != atoi(ops[0].c_str()) -1){
-                            objeto += "00\n"; // Pirntagem do codigo objeto do SPACES
-                        } else{
-                            objeto += "00";
-                        }
-                    }
-                    contador_posicao += atoi(ops[0].c_str());
+                if ((op != "COPY") && (op != "STOP") && (ops.size()) != 1) {
+                    throw invalid_argument("Invalid operand");
                 } else {
-                    objeto = "00"; // LEMBRAR QUE NÃO SE DEVE SERR COLOCADO XX MAS 00 QUANDO FOR SPACE
+                    contador_posicao += 1 + ops.size();
+                }
+
+                objeto = to_string(getValue(op, opcodes));
+
+                for (int o=0; o < ops.size(); o++) {
+                    fator = 0;
+                    if (programa[i].size() > 3){ // cehcar se tem X+3
+                        fator = std::stoi(programa[i].back());
+
+                       // cout << "############" << fator << endl;
+                    }
+
+                    objeto_temp = to_string(getValue(ops[o], ts)+fator);
+                    objeto += " " + objeto_temp;
+                }
+
+                cout << objeto;
+                cout << "\n";
+
+            } else if (count(diretivas.begin(), diretivas.end(), op)) {
+                if (op == "CONST") {
+                    objeto = ops[0];
+
                     contador_posicao += 1;
                 }
+                if (op == "SPACE") {
+                    if (ops.size() == 1) {
+                        objeto = "";
+                        for (int j=0; j < atoi(ops[0].c_str()); j++) {
+                            if (j != atoi(ops[0].c_str()) -1){
+                                objeto += "00\n"; // Pirntagem do codigo objeto do SPACES
+                            } else{
+                                objeto += "00";
+                            }
+                        }
+                        contador_posicao += atoi(ops[0].c_str());
+                    } else {
+                        objeto = "00"; // LEMBRAR QUE NÃO SE DEVE SERR COLOCADO XX MAS 00 QUANDO FOR SPACE
+                        contador_posicao += 1;
+                    }
+                }
+                cout << objeto;
+                cout << "\n";
+            } else {
+                throw invalid_argument("Unknown operation");
             }
-                                        cout << objeto;
-            cout << "\n";
-        } else {
-            throw invalid_argument("Unknown operation");
-        }
 
+        } else {
+            if (programa[i][1] == "TEXT") {
+                hasTEXT = true;
+            }
         }
         ops.clear();
     }
 
+    if (hasTEXT == false) {
+        cout << "Erro: nao tem SECTION TEXT\n";
+    }
 }
 
 string getLine(vector<string> strs) {
@@ -253,60 +269,39 @@ string getLine(vector<string> strs) {
 }
 
 void preProcessamento (vector<vector<string>> &programa) {
-    int section_text = 0;
     vector<int> remove_index;
     map <string,int> equs;
     int value;
     string label;
 
-    if (getLine(programa[0]) == "SECTION TEXT") {
-        return;
-    }
-
     for (int i=0; i < programa.size(); i++){
-        if (getLine(programa[i]) == "SECTION TEXT") {
-            section_text = 1;
-            continue;
+        if (programa[i].size() > 1) {
+            if (programa[i][1] == "EQU") {
+                label = getLabel(programa[i][0]);
+                value = atoi(programa[i][2].c_str());
+                equs.insert(pair<string, int>(label, value));
+                remove_index.push_back(i);
+
+                continue;
+            }
         }
 
-        if (section_text) {
-            // Tá dentro de texto, pode checar IF
-            if (programa[i][0] == "IF") {
-                if (inTS(programa[i][1], equs)) {
-                    value = getValue(programa[i][1], equs);
-                    remove_index.push_back(i);
-                    if (value == 0) {
-                        remove_index.push_back(i+1);
-                    }
-                } else {
-                    cout << "Erro: operando não é EQU";
-                }
-            } else {
-                if (programa[i].size() > 1) {
-                    if ((programa[i][1] == "SPACE") || (programa[i][1] == "CONST")) {
-                        if (programa[i].size() > 2) {
-                            if (inTS(programa[i][2], equs)) {
-                                value = getValue(programa[i][2], equs);
-                                programa[i][2] = to_string(value);
-                            }
+        if (programa[i][0] == "IF") {
+            value = getValue(programa[i][1], equs);
+            remove_index.push_back(i);
+            if (value == 0) {
+                remove_index.push_back(i+1);
+            }
+        } else {
+            if (programa[i].size() > 1) {
+                if ((programa[i][1] == "SPACE") || (programa[i][1] == "CONST")) {
+                    if (programa[i].size() > 2) {
+                        if (inTS(programa[i][2], equs)) {
+                            value = getValue(programa[i][2], equs);
+                            programa[i][2] = to_string(value);
                         }
                     }
                 }
-            }
-        } else {
-            // Tá fora de texto, precisa checar EQU
-            if (programa[i][1] == "EQU") {
-                if (isLabel(programa[i][0])) {
-                    label = getLabel(programa[i][0]);
-                    value = atoi(programa[i][2].c_str());
-                    equs.insert(pair<string, int>(label, value));
-                    remove_index.push_back(i);
-                } else {
-                    cout << "Erro: Falta rótulo em EQU";
-                }
-            } else {
-                cout << programa[i][1];
-                cout << "Erro: operação feita antes da seção de texto\n";
             }
         }
     }
@@ -317,6 +312,7 @@ void preProcessamento (vector<vector<string>> &programa) {
         programa.erase(programa.begin() + remove_index[i]);
     }
 
+    cout << "\nTERMINOU DE PRE PROCESSAR\n";
 }
 
 bool ehArg(string value, map<string,string> inds) {

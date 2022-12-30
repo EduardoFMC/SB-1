@@ -8,33 +8,15 @@
 using namespace std;
 
 int main(){
-    // TESTE com macro
-//    vector<vector<string>> programa = token_parser("fatoriamacro_testes.asm");
-//
-//    //printar_programa(programa);
-//    //printf("\n\n\n");
-//    //preProcessamento(programa); // 1 Parte. Lida apenas com EQU e IF
-//    processamentoMacro(programa);
-//
-//    printar_programa(programa);
-//
-//    //cout << "\n\n";
-//    //map <string,int> ts = primeiraPassagem(programa);
-//
-//    //segundaPassagem(programa, ts);
-
-    // TESTE sem macro
-    vector<vector<string>> programa = token_parser("bin_equ_teste.asm");
-
+    vector<vector<string>> programa = token_parser("bin_editado.asm");
     printar_programa(programa);
-    printf("\n\n\n");
-    preProcessamento(programa); // 1 Parte. Lida apenas com EQU e IF
+    cout << "\n\n";
+    preProcessamento(programa);
+    processamentoMacro(programa);
     printar_programa(programa);
-    printf("\n\n\n");
+    cout << "\n\n";
     map <string,int> ts = primeiraPassagem(programa);
     segundaPassagem(programa, ts);
-
-
 }
 
 //int main(int argc, char *argv[]){
