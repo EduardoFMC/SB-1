@@ -229,21 +229,18 @@ string segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
                     if (ops.size() == 1) {
                         objeto = "";
                         for (int j=0; j < atoi(ops[0].c_str()); j++) {
-                            if (j != atoi(ops[0].c_str()) -1){
-                                //objeto += "00\n"; // Pirntagem do codigo objeto do SPACES
-                                objeto += "00";
-                            } else{
-                                objeto += "00";
+                            if (j < atoi(ops[0].c_str()) - 1) {
+                                objeto += "0 ";
+                            } else {
+                                objeto += "0";
                             }
                         }
                         contador_posicao += atoi(ops[0].c_str());
                     } else {
-                        objeto = "00"; // LEMBRAR QUE NÃO SE DEVE SERR COLOCADO XX MAS 00 QUANDO FOR SPACE
+                        objeto = "0";
                         contador_posicao += 1;
                     }
                 }
-                //cout << objeto;
-                //cout << "\n";
                 objeto_final = objeto_final + objeto + " ";
 
             } else {
