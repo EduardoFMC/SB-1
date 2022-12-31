@@ -14,7 +14,7 @@ using namespace std;
 map <string,int> opcodes = {
 {"ADD", 1},
 {"SUB", 2},
-{"MULT", 3},
+{"MUL", 3},
 {"DIV", 4},
 {"JMP", 5},
 {"JMPN", 6},
@@ -29,7 +29,7 @@ map <string,int> opcodes = {
 
 vector<string> diretivas = {"CONST", "EQU", "IF", "SPACE", "SECTION"};
 
-void preProcessamento (vector<vector<string>> &programa) {
+void preprocess (vector<vector<string>> &programa) {
     vector<int> remove_index;
     map <string,int> equs;
     int value;
@@ -74,7 +74,7 @@ void preProcessamento (vector<vector<string>> &programa) {
     }
 }
 
-void processamentoMacro(vector<vector<string>> &programa) {
+void processMACRO(vector<vector<string>> &programa) {
     map <string,vector<vector<string>>> macros;
     map <string,string> macro_args;
     vector<string> macro_line;
@@ -104,7 +104,7 @@ void processamentoMacro(vector<vector<string>> &programa) {
                         args = sepOps(programa[i][1]);
 
                         for (int a=0; a < args.size(); a++) {
-                            if (ehArg(args[a], macro_args)) {
+                            if (isArg(args[a], macro_args)) {
                                 args[a] = macro_args[args[a]];
                             }
                         }
@@ -156,7 +156,7 @@ void processamentoMacro(vector<vector<string>> &programa) {
 
                             for (int b=0; b < args.size(); b++) {
                                 if (args[b][0] == '#') {
-                                    args[b] = args_repl[get_value(args[b])];
+                                    args[b] = args_repl[getValueMACRO(args[b])];
                                 }
                             }
 
@@ -195,7 +195,7 @@ void processamentoMacro(vector<vector<string>> &programa) {
     }
 }
 
-map <string,int> primeiraPassagem(vector<vector<string>> &programa){
+map <string,int> passOne(vector<vector<string>> &programa){
     int contador_posicao = 0;
     int contador_linha = 1;
     map <string,int> ts;
@@ -210,7 +210,7 @@ map <string,int> primeiraPassagem(vector<vector<string>> &programa){
         for (int j=0; j < programa[i].size(); j++) {
             if (isLabel(programa[i][j])) {
                 if (hasLabel) {
-                    throw invalid_argument("Mais de um rotulo na mesma linha.");
+                    throw invalid_argument("SYNTAX ERROR: more than 1 label at line " + to_string(contador_linha) + ".");
                 }
                 hasLabel = true;
             }
@@ -220,13 +220,19 @@ map <string,int> primeiraPassagem(vector<vector<string>> &programa){
             label = getLabel(programa[i][0]);
 
             if (isalpha(label[0]) == false) {
-                throw invalid_argument("Label iniciada com caracteres especiais ou numero.");
+                throw invalid_argument("LEXICAL ERROR: label defined with non-alphabetical character at line " + to_string(contador_linha) + ".");
+            }
+
+            if (isValidLabel(label) == false) {
+                cout << label;
+                cout << "\n";
+                throw invalid_argument("LEXICAL ERROR: label defined with non-alphanumerical character at line " + to_string(contador_linha) + ".");
             }
 
             op = programa[i][1];
 
             if (inTS(label, ts)) {
-                throw invalid_argument("Label already defined.");
+                throw invalid_argument("SEMANTIC ERROR: label already defined elsewhere at line " + to_string(contador_linha) + ".");
             } else {
                 ts.insert(pair<string, int>(label, contador_posicao));
             }
@@ -253,14 +259,14 @@ map <string,int> primeiraPassagem(vector<vector<string>> &programa){
                 }
             }
         } else {
-            throw invalid_argument("Unknown operation");
+            throw invalid_argument("SEMANTIC ERROR: unknown operation at line " + to_string(contador_linha) + ".");
         }
     }
 
     return ts;
 }
 
-string segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
+string passTwo(vector<vector<string>> &programa, map <string,int> ts) {
     int contador_posicao = 0;
     int contador_linha = 1;
     int fator;
@@ -299,22 +305,22 @@ string segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
             for (int p=0; p < ops.size(); p++) {
                 if (isSymbol(ops[p])) {
                     if (inTS(ops[p], ts) == 0) {
-                        throw invalid_argument("Dado nao declarado");
+                        throw invalid_argument("SEMANTIC ERROR: use of undeclared data at line " + to_string(contador_linha) + ".");
                     }
                 }
             }
 
             if (opcodes.count(op)) {
                 if ((op == "COPY") && (ops.size() != 2)) {
-                    throw invalid_argument("Numero invalido de argumentos");
+                    throw invalid_argument("SYNTAX ERROR: wrong number of arguments at line " + to_string(contador_linha) + ".");
                 }
 
                 if ((op == "STOP") && (ops.size() != 0)) {
-                    throw invalid_argument("Numero invalido de argumentos");
+                    throw invalid_argument("SYNTAX ERROR: wrong number of arguments at line " + to_string(contador_linha) + ".");
                 }
 
                 if ((op != "COPY") && (op != "STOP") && (ops.size()) != 1) {
-                    throw invalid_argument("Numero invalido de argumentos");
+                    throw invalid_argument("SYNTAX ERROR: wrong number of arguments at line " + to_string(contador_linha) + ".");
                 } else {
                     contador_posicao += 1 + ops.size();
                 }
@@ -358,7 +364,7 @@ string segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
                 objeto_final = objeto_final + objeto + " ";
 
             } else {
-                throw invalid_argument("Unknown operation");
+                throw invalid_argument("SEMANTIC ERROR: unknown operation at line " + to_string(contador_linha) + ".");
             }
 
         } else {
@@ -370,12 +376,10 @@ string segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
     }
 
     if (hasTEXT == false) {
-        throw invalid_argument("Falta SECTION TEXT");
+        throw invalid_argument("SEMANTIC ERROR: SECTION TEXT absent.");
     }
 
     return objeto_final;
 }
-
-// DEIXAR O TOKENIZADOR DE FORMA A SEPARAR MELHOR
 
 #endif // TRADUTOR_H_INCLUDED

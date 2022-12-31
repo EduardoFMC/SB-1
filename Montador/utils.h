@@ -53,11 +53,14 @@ bool isSymbol(string &token) {
     return false;
 }
 
-int getValue (string str, map <string,int> mp) {
-    return mp.find(str)->second;
+bool isValidLabel(string token) {
+    if (token.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_") != string::npos) {
+        return false;
+    }
+    return true;
 }
 
-string getValueEQUS (string str, map <string,string> mp) {
+int getValue (string str, map <string,int> mp) {
     return mp.find(str)->second;
 }
 
@@ -71,7 +74,7 @@ string getLine(vector<string> strs) {
     return result;
 }
 
-bool ehArg(string value, map<string,string> inds) {
+bool isArg(string value, map<string,string> inds) {
     if (inds.find(value) == inds.end()) {
       return false;
     }
@@ -96,9 +99,9 @@ bool inMACROS(string token, map <string,vector<vector<string>>> macros) {
     return true;
 }
 
-int get_value(string token) {
+int getValueMACRO(string token) {
     token.erase(0,1);
     return atoi(token.c_str());
 }
 
-#endif
+#endif // UTILS_H_INCLUDED
