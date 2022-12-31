@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <cctype>
 #include <string>
+#include "utils.h"
 
 using namespace std;
 
@@ -27,250 +28,6 @@ map <string,int> opcodes = {
 {"STOP", 14}};
 
 vector<string> diretivas = {"CONST", "EQU", "IF", "SPACE", "SECTION"};
-
-vector<string> sepOps(string ops) {
-    string tmp;
-    stringstream ss(ops);
-    vector<string> words;
-
-    while(getline(ss, tmp, ',')) {
-        words.push_back(tmp);
-    }
-
-    return words;
-}
-
-
-bool isLabel(string token) {
-    if (token[token.length()-1] == ':') {
-        return true;
-    }
-    return false;
-}
-
-string getLabel(string token) {
-    return token.substr(0, token.size()-1);
-}
-
-bool inTS(string token, map <string,int> ts) {
-    if (ts.find(token) == ts.end()) {
-        return false;
-    }
-    return true;
-}
-
-
-bool isSymbol(string &token) {
-    string::iterator it;
-
-    for (it = token.begin(); it != token.end(); it++){
-        if (isdigit(*it) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-map <string,int> primeiraPassagem(vector<vector<string>> &programa){
-    int contador_posicao = 0;
-    int contador_linha = 1;
-    map <string,int> ts;
-    string label;
-    string op;
-    string opn;
-    bool hasLabel;
-
-    for (int i=0; i < programa.size(); i++, contador_linha++){
-        hasLabel = false;
-
-        for (int j=0; j < programa[i].size(); j++) {
-            if (isLabel(programa[i][j])) {
-                if (hasLabel) {
-                    cout << "Erro: mais de um rotulo na mesma linha\n";
-                }
-                hasLabel = true;
-            }
-        }
-
-        if (isLabel(programa[i][0])) {
-            label = getLabel(programa[i][0]);
-            op = programa[i][1];
-
-            if (inTS(label, ts)) {
-                cout << "Erro: Label ja definida.\n";
-                throw invalid_argument("Label already defined");
-            } else {
-                ts.insert(pair<string, int>(label, contador_posicao));
-            }
-        } else {
-            op = programa[i][0];
-        }
-
-        if (opcodes.count(op)) {
-            if (op == "COPY") {
-                contador_posicao += 3;
-            } else if (op == "STOP") {
-                contador_posicao += 1;
-            } else {
-                contador_posicao += 2;
-            }
-        } else if (count(diretivas.begin(), diretivas.end(), op)) {
-            if (op == "CONST") {
-                contador_posicao += 1;
-            } else if (op == "SPACE") {
-                if (programa[i].size() > 2) {
-                    contador_posicao += stoi(programa[i][2]);
-                } else {
-                    contador_posicao += 1;
-                }
-            }
-        } else {
-            cout << "Erro: op desconhecido.\n";
-            throw invalid_argument("Unknown operation");
-        }
-    }
-
-    return ts;
-}
-
-int getValue (string str, map <string,int> mp) {
-    return mp.find(str)->second;
-}
-
-string getValueEQUS (string str, map <string,string> mp) {
-    return mp.find(str)->second;
-}
-
-string segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
-    int contador_posicao = 0;
-    int contador_linha = 1;
-    int fator;
-    string label;
-    string op;
-    string ops_i;
-    vector<string> ops;
-    string objeto = "";
-    string objeto_temp = "";
-    string objeto_final; // PARA O ARQUIVO OBJETO
-    bool hasTEXT = false;
-
-    for (int i=0; i < programa.size(); i++, contador_linha++){
-        if (isLabel(programa[i][0])) {
-            label = getLabel(programa[i][0]);
-            op = programa[i][1];
-
-            if (programa[i].size() > 2) {
-                ops_i = programa[i][2];
-            } else {
-                ops_i = "";
-            }
-        } else {
-            op = programa[i][0];
-
-            if (programa[i].size() > 1) {
-                ops_i = programa[i][1];
-            } else {
-                ops_i = "";
-            }
-        }
-
-        if (op != "SECTION") {
-            ops = sepOps(ops_i);
-
-            for (int p=0; p < ops.size(); p++) {
-                if (isSymbol(ops[p])) {
-                    if (inTS(ops[p], ts) == 0) {
-                        cout << "Erro: dado nao declarado\n";
-                        throw invalid_argument("Dado nao declarado");
-                    }
-                }
-            }
-
-            if (opcodes.count(op)) {
-                if ((op == "COPY") && (ops.size() != 2)) {
-                    throw invalid_argument("Invalid operand");
-                }
-
-                if ((op == "STOP") && (ops.size() != 0)) {
-                    throw invalid_argument("Invalid operand");
-                }
-
-                if ((op != "COPY") && (op != "STOP") && (ops.size()) != 1) {
-                    throw invalid_argument("Invalid operand");
-                } else {
-                    contador_posicao += 1 + ops.size();
-                }
-
-                objeto = to_string(getValue(op, opcodes));
-
-                for (int o=0; o < ops.size(); o++) {
-                    fator = 0;
-                    if (programa[i].size() > 3){ // cehcar se tem X+3
-                        fator = std::stoi(programa[i].back());
-
-                       // cout << "############" << fator << endl;
-                    }
-
-                    objeto_temp = to_string(getValue(ops[o], ts)+fator);
-                    objeto += " " + objeto_temp;
-                }
-
-                //cout << objeto;
-                //cout << "\n";
-                objeto_final = objeto_final + objeto + " ";
-
-            } else if (count(diretivas.begin(), diretivas.end(), op)) {
-                if (op == "CONST") {
-                    objeto = ops[0];
-
-                    contador_posicao += 1;
-                }
-                if (op == "SPACE") {
-                    if (ops.size() == 1) {
-                        objeto = "";
-                        for (int j=0; j < atoi(ops[0].c_str()); j++) {
-                            if (j < atoi(ops[0].c_str()) - 1) {
-                                objeto += "0 ";
-                            } else {
-                                objeto += "0";
-                            }
-                        }
-                        contador_posicao += atoi(ops[0].c_str());
-                    } else {
-                        objeto = "0";
-                        contador_posicao += 1;
-                    }
-                }
-                objeto_final = objeto_final + objeto + " ";
-
-            } else {
-                throw invalid_argument("Unknown operation");
-            }
-
-        } else {
-            if (programa[i][1] == "TEXT") {
-                hasTEXT = true;
-            }
-        }
-        ops.clear();
-    }
-
-    if (hasTEXT == false) {
-        cout << "Erro: nao tem SECTION TEXT\n";
-    }
-
-    return objeto_final;
-}
-
-string getLine(vector<string> strs) {
-    string result;
-    ostringstream imploded;
-    copy(strs.begin(), strs.end(),
-               ostream_iterator<string>(imploded, " "));
-    result = imploded.str();
-    result.pop_back();
-    return result;
-}
 
 void preProcessamento (vector<vector<string>> &programa) {
     vector<int> remove_index;
@@ -315,36 +72,6 @@ void preProcessamento (vector<vector<string>> &programa) {
     for (int i=0; i < remove_index.size(); i++) {
         programa.erase(programa.begin() + remove_index[i]);
     }
-}
-
-bool ehArg(string value, map<string,string> inds) {
-    if (inds.find(value) == inds.end()) {
-      return false;
-    }
-    return true;
-}
-
-string joinOps(vector<string> strs) {
-    string result;
-    ostringstream imploded;
-    copy(strs.begin(), strs.end(),
-               ostream_iterator<string>(imploded, ","));
-    result = imploded.str();
-    result.pop_back();
-
-    return result;
-}
-
-bool inMACROS(string token, map <string,vector<vector<string>>> macros) {
-    if (macros.find(token) == macros.end()) {
-        return false;
-    }
-    return true;
-}
-
-int get_value(string token) {
-    token.erase(0,1);
-    return atoi(token.c_str());
 }
 
 void processamentoMacro(vector<vector<string>> &programa) {
@@ -466,6 +193,187 @@ void processamentoMacro(vector<vector<string>> &programa) {
         end_correcao += 1 + end_macros[i].second - end_macros[i].first;
 
     }
+}
+
+map <string,int> primeiraPassagem(vector<vector<string>> &programa){
+    int contador_posicao = 0;
+    int contador_linha = 1;
+    map <string,int> ts;
+    string label;
+    string op;
+    string opn;
+    bool hasLabel;
+
+    for (int i=0; i < programa.size(); i++, contador_linha++){
+        hasLabel = false;
+
+        for (int j=0; j < programa[i].size(); j++) {
+            if (isLabel(programa[i][j])) {
+                if (hasLabel) {
+                    throw invalid_argument("Mais de um rotulo na mesma linha.");
+                }
+                hasLabel = true;
+            }
+        }
+
+        if (isLabel(programa[i][0])) {
+            label = getLabel(programa[i][0]);
+
+            if (isalpha(label[0]) == false) {
+                throw invalid_argument("Label iniciada com caracteres especiais ou numero.");
+            }
+
+            op = programa[i][1];
+
+            if (inTS(label, ts)) {
+                throw invalid_argument("Label already defined.");
+            } else {
+                ts.insert(pair<string, int>(label, contador_posicao));
+            }
+        } else {
+            op = programa[i][0];
+        }
+
+        if (opcodes.count(op)) {
+            if (op == "COPY") {
+                contador_posicao += 3;
+            } else if (op == "STOP") {
+                contador_posicao += 1;
+            } else {
+                contador_posicao += 2;
+            }
+        } else if (count(diretivas.begin(), diretivas.end(), op)) {
+            if (op == "CONST") {
+                contador_posicao += 1;
+            } else if (op == "SPACE") {
+                if (programa[i].size() > 2) {
+                    contador_posicao += stoi(programa[i][2]);
+                } else {
+                    contador_posicao += 1;
+                }
+            }
+        } else {
+            throw invalid_argument("Unknown operation");
+        }
+    }
+
+    return ts;
+}
+
+string segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
+    int contador_posicao = 0;
+    int contador_linha = 1;
+    int fator;
+    string label;
+    string op;
+    string ops_i;
+    vector<string> ops;
+    string objeto = "";
+    string objeto_temp = "";
+    string objeto_final; // PARA O ARQUIVO OBJETO
+    bool hasTEXT = false;
+
+    for (int i=0; i < programa.size(); i++, contador_linha++){
+        if (isLabel(programa[i][0])) {
+            label = getLabel(programa[i][0]);
+            op = programa[i][1];
+
+            if (programa[i].size() > 2) {
+                ops_i = programa[i][2];
+            } else {
+                ops_i = "";
+            }
+        } else {
+            op = programa[i][0];
+
+            if (programa[i].size() > 1) {
+                ops_i = programa[i][1];
+            } else {
+                ops_i = "";
+            }
+        }
+
+        if (op != "SECTION") {
+            ops = sepOps(ops_i);
+
+            for (int p=0; p < ops.size(); p++) {
+                if (isSymbol(ops[p])) {
+                    if (inTS(ops[p], ts) == 0) {
+                        throw invalid_argument("Dado nao declarado");
+                    }
+                }
+            }
+
+            if (opcodes.count(op)) {
+                if ((op == "COPY") && (ops.size() != 2)) {
+                    throw invalid_argument("Numero invalido de argumentos");
+                }
+
+                if ((op == "STOP") && (ops.size() != 0)) {
+                    throw invalid_argument("Numero invalido de argumentos");
+                }
+
+                if ((op != "COPY") && (op != "STOP") && (ops.size()) != 1) {
+                    throw invalid_argument("Numero invalido de argumentos");
+                } else {
+                    contador_posicao += 1 + ops.size();
+                }
+
+                objeto = to_string(getValue(op, opcodes));
+
+                for (int o=0; o < ops.size(); o++) {
+                    fator = 0;
+                    if (programa[i].size() > 3){ // cehcar se tem X+3
+                        fator = std::stoi(programa[i].back());
+                    }
+
+                    objeto_temp = to_string(getValue(ops[o], ts)+fator);
+                    objeto += " " + objeto_temp;
+                }
+
+                objeto_final = objeto_final + objeto + " ";
+
+            } else if (count(diretivas.begin(), diretivas.end(), op)) {
+                if (op == "CONST") {
+                    objeto = ops[0];
+
+                    contador_posicao += 1;
+                }
+                if (op == "SPACE") {
+                    if (ops.size() == 1) {
+                        objeto = "";
+                        for (int j=0; j < atoi(ops[0].c_str()); j++) {
+                            if (j < atoi(ops[0].c_str()) - 1) {
+                                objeto += "0 ";
+                            } else {
+                                objeto += "0";
+                            }
+                        }
+                        contador_posicao += atoi(ops[0].c_str());
+                    } else {
+                        objeto = "0";
+                        contador_posicao += 1;
+                    }
+                }
+                objeto_final = objeto_final + objeto + " ";
+
+            } else {
+                throw invalid_argument("Unknown operation");
+            }
+
+        } else {
+            if (programa[i][1] == "TEXT") {
+                hasTEXT = true;
+            }
+        }
+        ops.clear();
+    }
+
+    if (hasTEXT == false) {
+        throw invalid_argument("Falta SECTION TEXT");
+    }
+
+    return objeto_final;
 }
 
 // DEIXAR O TOKENIZADOR DE FORMA A SEPARAR MELHOR

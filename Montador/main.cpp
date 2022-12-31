@@ -5,6 +5,7 @@
 
 #include "tradutor.h"
 #include "tokenizador.h"
+#include "utils.h"
 
 using namespace std;
 // g++ -std=c++17 -o montador main.cpp
