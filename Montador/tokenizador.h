@@ -61,9 +61,13 @@ vector<vector<string>> token_parser(string arquivo){
 
                     if (token.find('+') != std::string::npos){
                         vec = trataPlus(token);
-                        linha.push_back(vec[0]);
-                        linha.push_back("+");
-                        linha.push_back(vec[1]);
+                        if (token.size() > 1) {
+                            linha.push_back(vec[0]);
+                            linha.push_back("+");
+                            linha.push_back(vec[1]);
+                        } else {
+                            linha.push_back("+");
+                        }
                     }else{
                         linha.push_back(token);
                     }

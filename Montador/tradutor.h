@@ -262,8 +262,6 @@ string segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
         cout << "Erro: nao tem SECTION TEXT\n";
     }
 
-    cout << "\nTERMINO 2 PASSAGEM";
-    cout << "\n" << objeto_final;
     return objeto_final;
 }
 
@@ -320,8 +318,6 @@ void preProcessamento (vector<vector<string>> &programa) {
     for (int i=0; i < remove_index.size(); i++) {
         programa.erase(programa.begin() + remove_index[i]);
     }
-
-    cout << "\nTERMINOU DE PRE PROCESSAR\n";
 }
 
 bool ehArg(string value, map<string,string> inds) {
