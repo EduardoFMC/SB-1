@@ -10,14 +10,15 @@
 	<fstream>
 	<regex>
 
-1672362996 source:e:\2022.2\sb\sb-1\montador\main.cpp
+1672447465 source:e:\2022.2\sb\sb-1\montador\main.cpp
 	<bits/stdc++.h>
 	<fstream>
 	<iostream>
+	<string>
 	"tradutor.h"
 	"tokenizador.h"
 
-1672383843 e:\2022.2\sb\sb-1\montador\tradutor.h
+1672448060 e:\2022.2\sb\sb-1\montador\tradutor.h
 	<bits/stdc++.h>
 	<fstream>
 	<regex>
@@ -25,7 +26,10 @@
 	<cctype>
 	<string>
 
-1672381841 e:\2022.2\sb\sb-1\montador\tokenizador.h
+1672447183 e:\2022.2\sb\sb-1\montador\tokenizador.h
 	<string.h>
 	<stdio.h>
+	<iostream>
+	<fstream>
+	"tradutor.h"
 

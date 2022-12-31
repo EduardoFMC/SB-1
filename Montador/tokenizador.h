@@ -3,6 +3,8 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
 #include "tradutor.h"
 
 bool labelSozinha(vector<string> linha){
@@ -20,8 +22,8 @@ vector<string> trataPlus(string tokenPlus){
     while (getline(iss, s, '+')) {
         vec.push_back(s);
     }
-    cout << vec[0] << endl;
-    cout << vec[1] << endl;
+    //cout << vec[0] << endl;
+    //cout << vec[1] << endl;
     return vec;
 }
 
@@ -95,5 +97,43 @@ void printar_programa(vector<vector<string>> programa) {
     }
 }
 
+// criar os aqruivos .PRE .MCR
+void create_file(vector<vector<string>> programa,  std::string file_name, std::string extension){
 
+    std::ofstream outfile (file_name + extension); // criar arquivo vazio
+
+    for (int i=0; i < programa.size(); i++){
+        for (int j=0; j < programa[i].size(); j++) {
+            outfile << programa[i][j];
+            outfile << " ";
+        }
+        outfile << "\n";
+    }
+
+    outfile.close(); // por algum motivo meu PC explode se nao colocar isso aqui.
+}
+
+void create_file_obj(string objeto, std::string file_name, std::string extension){
+
+    std::ofstream outfile (file_name + extension); // criar arquivo vazio
+    outfile << objeto;
+    outfile.close(); // por algum motivo meu PC explode se nao colocar isso aqui.
+}
 #endif // TOKENIZADOR_H_INCLUDED
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

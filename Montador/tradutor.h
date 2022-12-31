@@ -141,7 +141,7 @@ string getValueEQUS (string str, map <string,string> mp) {
     return mp.find(str)->second;
 }
 
-void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
+string segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
     int contador_posicao = 0;
     int contador_linha = 1;
     int fator;
@@ -150,7 +150,8 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
     string ops_i;
     vector<string> ops;
     string objeto = "";
-    string objeto_temp;
+    string objeto_temp = "";
+    string objeto_final; // PARA O ARQUIVO OBJETO
     bool hasTEXT = false;
 
     for (int i=0; i < programa.size(); i++, contador_linha++){
@@ -214,8 +215,9 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
                     objeto += " " + objeto_temp;
                 }
 
-                cout << objeto;
-                cout << "\n";
+                //cout << objeto;
+                //cout << "\n";
+                objeto_final = objeto_final + objeto + " ";
 
             } else if (count(diretivas.begin(), diretivas.end(), op)) {
                 if (op == "CONST") {
@@ -228,7 +230,8 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
                         objeto = "";
                         for (int j=0; j < atoi(ops[0].c_str()); j++) {
                             if (j != atoi(ops[0].c_str()) -1){
-                                objeto += "00\n"; // Pirntagem do codigo objeto do SPACES
+                                //objeto += "00\n"; // Pirntagem do codigo objeto do SPACES
+                                objeto += "00";
                             } else{
                                 objeto += "00";
                             }
@@ -239,8 +242,10 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
                         contador_posicao += 1;
                     }
                 }
-                cout << objeto;
-                cout << "\n";
+                //cout << objeto;
+                //cout << "\n";
+                objeto_final = objeto_final + objeto + " ";
+
             } else {
                 throw invalid_argument("Unknown operation");
             }
@@ -256,6 +261,10 @@ void segundaPassagem(vector<vector<string>> &programa, map <string,int> ts) {
     if (hasTEXT == false) {
         cout << "Erro: nao tem SECTION TEXT\n";
     }
+
+    cout << "\nTERMINO 2 PASSAGEM";
+    cout << "\n" << objeto_final;
+    return objeto_final;
 }
 
 string getLine(vector<string> strs) {
