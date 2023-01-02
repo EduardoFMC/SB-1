@@ -21,8 +21,6 @@ int main(int argc, char *argv[]){
     if(op == "-p"){ // .PRE
         preprocess(programa);
         createFile(programa, file_name, ".PRE");
-        cout << file_name;
-        cout << "\n";
         return 0;
     }
 
